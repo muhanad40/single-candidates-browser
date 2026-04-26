@@ -35,43 +35,55 @@ function loadCandidates() {
   const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
   const rowToImage = buildRowImageMap();
 
+  // Find the header row (first row that contains "Full Name")
+  let headerRowIdx = data.findIndex(row => row.includes('Full Name'));
+  if (headerRowIdx === -1) throw new Error('Could not find header row in spreadsheet');
+
+  // Build a column name → index map (normalise whitespace/case)
+  const headers = data[headerRowIdx];
+  const col = {};
+  headers.forEach((h, i) => { if (h) col[h.toString().trim().toLowerCase()] = i; });
+
+  const c = name => col[name] ?? -1;
+
   const candidates = [];
   let id = 3;
 
-  for (let i = 2; i < data.length; i++) {
+  for (let i = headerRowIdx + 1; i < data.length; i++) {
     const row = data[i];
-    const name = row[1];
-    if (!name || typeof name !== 'string') continue;
+    const name = row[c('full name')];
+    if (!name || typeof name !== 'string' || !name.trim()) continue;
 
-    const age = typeof row[4] === 'number' && row[4] < 120 ? row[4] : null;
-    const height = typeof row[6] === 'number' ? row[6] : null;
-    // XML row index = i (0-indexed from top of sheet, row 0 = sheet row 1)
-    const xmlRow = i; // data[0]=row1, data[2]=row3=first candidate, xmlRow=2
-    const imageFile = rowToImage[xmlRow] || null;
+    const rawAge = row[c('age')];
+    const age = typeof rawAge === 'number' && rawAge > 0 && rawAge < 120 ? rawAge : null;
+    const rawHeight = row[c('height (cm)')];
+    const height = typeof rawHeight === 'number' && rawHeight > 0 ? rawHeight : null;
+    const imageFile = rowToImage[i] || null;
 
     candidates.push({
       id: id++,
       image: imageFile ? `/images/${imageFile}` : null,
       name: name.trim(),
-      dob: row[3] || null,
+      dob:          row[c('date of birth')] || null,
       age,
-      gender: row[5] || null,
+      gender:       row[c('gender')] || null,
       height,
-      education: row[7] || null,
-      profession: row[8] || null,
-      income: row[9] || null,
-      religiosity: row[10] || null,
-      location: row[11] || null,
-      hobbies: row[12] || null,
-      ethnicity: row[13] || null,
-      minAge: typeof row[14] === 'number' ? row[14] : null,
-      maxAge: typeof row[15] === 'number' ? row[15] : null,
-      status: row[16] || null,
-      hasKids: row[17] || null,
-      sect: row[18] || null,
-      contact: row[19] || null,
-      matchHistory: row[20] || null,
-      comments: row[21] || null,
+      education:    row[c('education')] || null,
+      profession:   row[c('profession')] || null,
+      income:       row[c('income status')] || null,
+      religiosity:  row[c('religiousity level')] || row[c('religiosity level')] || null,
+      location:     row[c('location')] || null,
+      hobbies:      row[c('interests/ hobbies')] || row[c('interests/hobbies')] || null,
+      ethnicity:    row[c('ethinicity')] || row[c('ethnicity')] || null,
+      minAge:       typeof row[c('min age')] === 'number' ? row[c('min age')] : null,
+      maxAge:       typeof row[c('max age')] === 'number' ? row[c('max age')] : null,
+      status:       row[c('single/divorced?')] || null,
+      hasKids:      row[c('do they have kids?')] || null,
+      sect:         row[c('shia/ sunni')] || row[c('shia/sunni')] || null,
+      contact:      row[c('contact details')] || null,
+      matchHistory: row[c('match history')] || null,
+      pointOfContact: row[c('point of contact')] || null,
+      comments:     row[c('comments')] || null,
     });
   }
 

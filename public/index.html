@@ -615,8 +615,9 @@ function renderCarousel(preserveIndex = false) {
           ${cardField('Hobbies', m.hobbies)}
           ${cardField('DOB', m.dob)}
         </div>
-        ${m.contact || m.matchHistory || m.comments ? '<hr class="card-divider">' : ''}
+        ${m.contact || m.pointOfContact || m.matchHistory || m.comments ? '<hr class="card-divider">' : ''}
         ${m.contact ? `<div class="card-contact">${m.contact}</div>` : ''}
+        ${m.pointOfContact ? `<div class="card-note">via ${m.pointOfContact}</div>` : ''}
         ${m.matchHistory ? `<div class="card-note history">Match history: ${m.matchHistory}</div>` : ''}
         ${m.comments ? `<div class="card-note">${m.comments}</div>` : ''}
         <div class="match-card-actions">
