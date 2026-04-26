@@ -554,7 +554,7 @@ function renderCarousel(preserveIndex = false) {
     if (m.id === c.id) return false;
     if (m.gender !== oppositeGender) return false;
     if (excluded.has(m.name.toLowerCase())) return false;
-    if (rejected.has(rejectionKey(c.id, m.id))) return false;
+    if (rejected.has(rejectionKey(c.id, m.id)) || rejected.has(rejectionKey(m.id, c.id))) return false;
     if (ageMin  && m.age    && m.age    < ageMin)  return false;
     if (ageMax  && m.age    && m.age    > ageMax)  return false;
     if (htMin   && m.height && m.height < htMin)   return false;
