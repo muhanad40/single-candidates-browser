@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Candidate Browser</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f4f1ee; color: #222; min-height: 100vh; }
+
+  header { background: #3b2a4a; color: white; padding: 14px 24px; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.02em; display: flex; align-items: center; gap: 16px; }
+  header .planned-btn { margin-left: auto; background: #6d4c8a; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  header .planned-btn:hover { background: #8060a8; }
+  header .planned-badge { background: #e88fc7; color: #3b2a4a; border-radius: 10px; padding: 1px 7px; font-size: 0.75rem; font-weight: 700; }
+
+  .layout { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 50px); }
+
+  /* Sidebar */
+  .sidebar { background: #2e2040; color: #e8e0f0; display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-search { padding: 12px; border-bottom: 1px solid #4a3660; }
+  .sidebar-search input { width: 100%; padding: 8px 10px; border-radius: 6px; border: none; background: #1e1530; color: white; font-size: 0.9rem; }
+  .sidebar-search input::placeholder { color: #8070a0; }
+  .candidate-list { flex: 1; overflow-y: auto; }
+  .candidate-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #3a2a50; transition: background 0.15s; display: flex; align-items: center; gap: 10px; }
+  .candidate-item:hover { background: #3d2d55; }
+  .candidate-item.active { background: #6d4c8a; }
+  .candidate-item .c-thumb { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #3a2a50; }
+  .candidate-item .c-thumb-placeholder { width: 38px; height: 38px; border-radius: 50%; background: #3a2a50; display: flex; align-items: center; justify-content: center; color: #8070a0; font-size: 1rem; flex-shrink: 0; }
+  .candidate-item .c-text { min-width: 0; }
+  .candidate-item .c-name { font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .candidate-item .c-meta { font-size: 0.74rem; color: #b0a0c0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gender-female { border-left: 3px solid #e88fc7; }
+  .gender-male { border-left: 3px solid #7ab8e8; }
+
+  /* Main */
+  .main { display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Selected card */
+  .selected-panel { background: white; border-bottom: 2px solid #e0d8f0; padding: 20px 24px; min-height: 160px; max-height: 220px; overflow: hidden; }
+  .selected-panel.empty { display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 1rem; }
+  .selected-card { display: flex; gap: 20px; align-items: flex-start; }
+  .selected-photo { width: 130px; height: 160px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #e0d8f0; }
+  .selected-photo-placeholder { width: 130px; height: 160px; border-radius: 8px; background: #e8e0f0; display: flex; align-items: center; justify-content: center; color: #b0a0c0; font-size: 2rem; flex-shrink: 0; }
+  .selected-info h2 { font-size: 1.3rem; color: #3b2a4a; }
+  .selected-info .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag { background: #f0eafa; color: #5a3a7a; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; }
+  .tag.highlight { background: #3b2a4a; color: white; }
+  .selected-info .contact-row { margin-top: 10px; font-size: 0.82rem; color: #666; }
+  .selected-info .comments-row { margin-top: 6px; font-size: 0.82rem; color: #888; font-style: italic; }
+
+  /* Filters */
+  .filters-panel { background: #faf8ff; border-bottom: 1px solid #e0d8f0; padding: 10px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .filters-panel label { font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 6px; }
+  .filters-panel input[type=number] { width: 60px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.82rem; }
+  .filters-panel select { padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.82rem; }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filters-title { font-size: 0.8rem; font-weight: 600; color: #5a3a7a; white-space: nowrap; }
+  .match-count { margin-left: auto; font-size: 0.82rem; color: #888; }
+
+  /* Carousel */
+  .carousel-section { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .carousel-header { padding: 10px 24px 6px; font-size: 0.85rem; font-weight: 600; color: #5a3a7a; }
+  .carousel-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; align-items: flex-start; gap: 14px; padding: 10px 24px 16px; }
+  .carousel-scroll::-webkit-scrollbar { height: 6px; }
+  .carousel-scroll::-webkit-scrollbar-track { background: #e8e0f0; border-radius: 3px; }
+  .carousel-scroll::-webkit-scrollbar-thumb { background: #9a80b8; border-radius: 3px; }
+
+  .match-card { background: white; border-radius: 10px; min-width: 190px; max-width: 190px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border: 2px solid transparent; overflow: hidden; }
+  .match-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.13); border-color: #9a80b8; }
+  .match-card-photo { width: 100%; max-height: 260px; object-fit: contain; background: #f0ecf8; display: block; }
+  .match-card-photo-placeholder { width: 100%; height: 180px; background: #f0ecf8; display: flex; align-items: center; justify-content: center; color: #c0b0d0; font-size: 2.5rem; }
+  .match-card-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
+  .match-card h3 { font-size: 0.92rem; color: #3b2a4a; }
+  .match-card .meta { font-size: 0.78rem; color: #888; }
+  .match-card .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .match-card .tag { font-size: 0.72rem; padding: 2px 8px; }
+  .match-card .contact { font-size: 0.75rem; color: #9a80b8; margin-top: 4px; word-break: break-all; }
+  .match-card .comments { font-size: 0.74rem; color: #aaa; font-style: italic; margin-top: 2px; }
+
+  .no-matches { display: flex; align-items: center; justify-content: center; width: 100%; color: #aaa; font-size: 0.9rem; }
+
+  /* Matched pairs panel */
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 14px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+  .modal-header { display: flex; align-items: flex-start; gap: 20px; padding: 24px 24px 0; }
+  .modal-photo { width: 150px; max-height: 220px; object-fit: contain; border-radius: 10px; flex-shrink: 0; background: #f0ecf8; }
+  .modal-photo-placeholder { width: 150px; height: 180px; border-radius: 10px; background: #f0ecf8; display: flex; align-items: center; justify-content: center; color: #b0a0c0; font-size: 3rem; flex-shrink: 0; }
+  .modal-title { flex: 1; }
+  .modal-title h2 { font-size: 1.4rem; color: #3b2a4a; margin-bottom: 8px; }
+  .modal-close { background: none; border: none; font-size: 1.4rem; color: #aaa; cursor: pointer; line-height: 1; padding: 0 0 0 12px; flex-shrink: 0; }
+  .modal-close:hover { color: #666; }
+  .modal-body { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .modal-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .modal-label { font-size: 0.78rem; font-weight: 600; color: #9a80b8; min-width: 90px; flex-shrink: 0; }
+  .modal-value { font-size: 0.88rem; color: #333; }
+  .modal-divider { border: none; border-top: 1px solid #f0e8f8; margin: 4px 0; }
+  .modal-footer { padding: 0 24px 24px; display: flex; gap: 10px; }
+  .btn-match { background: #3b2a4a; color: white; border: none; padding: 10px 22px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; flex: 1; transition: background 0.15s; }
+  .btn-match:hover { background: #5a3a7a; }
+  .btn-match:disabled { background: #ccc; cursor: default; }
+  .btn-match.already { background: #a0c8a0; cursor: default; }
+  .btn-cancel { background: #f0e8f8; color: #5a3a7a; border: none; padding: 10px 18px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+  .btn-cancel:hover { background: #e0d0f0; }
+
+  /* Planned matches drawer */
+  .planned-drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 200; display: flex; flex-direction: column; transition: right 0.25s ease; }
+  .planned-drawer.open { right: 0; }
+  .planned-drawer-header { background: #3b2a4a; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 10px; }
+  .planned-drawer-header h3 { font-size: 1rem; font-weight: 600; flex: 1; }
+  .planned-drawer-close { background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer; line-height: 1; }
+  .planned-drawer-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .planned-empty { color: #bbb; font-size: 0.9rem; text-align: center; margin-top: 40px; }
+  .planned-item { background: #f8f4ff; border: 1px solid #e0d0f0; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #3b2a4a; font-family: monospace; }
+  .planned-item-text { flex: 1; word-break: break-word; }
+  .planned-item-remove { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1rem; line-height: 1; flex-shrink: 0; }
+  .planned-item-remove:hover { color: #e06060; }
+  .planned-drawer-footer { padding: 14px 16px; border-top: 1px solid #f0e8f8; display: flex; flex-direction: column; gap: 8px; }
+  .planned-output { width: 100%; height: 100px; font-size: 0.78rem; font-family: monospace; border: 1px solid #d0c8e0; border-radius: 6px; padding: 8px; resize: none; color: #444; background: #fafafa; }
+  .btn-copy { background: #6d4c8a; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 0.82rem; cursor: pointer; width: 100%; }
+  .btn-copy:hover { background: #8060a8; }
+  .btn-copy.copied { background: #60a080; }
+</style>
+</head>
+<body>
+
+<header>
+  Candidate Browser
+  <button class="planned-btn" onclick="toggleDrawer()">
+    Planned matches <span class="planned-badge" id="plannedBadge">0</span>
+  </button>
+</header>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-search">
+      <input type="text" id="search" placeholder="Search candidates..." oninput="renderList()">
+    </div>
+    <div class="candidate-list" id="candidateList"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Selected -->
+    <div class="selected-panel empty" id="selectedPanel">
+      <span>Select a candidate from the list</span>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-panel" id="filtersPanel" style="display:none">
+      <span class="filters-title">Carousel filters:</span>
+      <div class="filter-group">
+        <label>Age: <input type="number" id="fAgeMin" placeholder="min" style="width:55px" oninput="renderCarousel()"> – <input type="number" id="fAgeMax" placeholder="max" style="width:55px" oninput="renderCarousel()"></label>
+      </div>
+      <div class="filter-group">
+        <label>Height (cm): <input type="number" id="fHeightMin" placeholder="min" style="width:60px" oninput="renderCarousel()"> – <input type="number" id="fHeightMax" placeholder="max" style="width:60px" oninput="renderCarousel()"></label>
+      </div>
+      <div class="filter-group">
+        <label>Sect: <select id="fSect" onchange="renderCarousel()">
+          <option value="">Any</option>
+          <option>Shia</option>
+          <option>Sunni</option>
+        </select></label>
+      </div>
+      <div class="filter-group">
+        <label>Status: <select id="fStatus" onchange="renderCarousel()">
+          <option value="">Any</option>
+          <option>Single</option>
+          <option>Divorced</option>
+        </select></label>
+      </div>
+      <span class="match-count" id="matchCount"></span>
+    </div>
+
+    <!-- Carousel -->
+    <div class="carousel-section">
+      <div class="carousel-header" id="carouselHeader"></div>
+      <div class="carousel-scroll" id="carousel"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header" id="modalHeader"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Planned Matches Drawer -->
+<div class="planned-drawer" id="plannedDrawer">
+  <div class="planned-drawer-header">
+    <h3>Planned Matches</h3>
+    <button class="planned-drawer-close" onclick="toggleDrawer()">✕</button>
+  </div>
+  <div class="planned-drawer-body" id="plannedList"></div>
+  <div class="planned-drawer-footer">
+    <textarea class="planned-output" id="plannedOutput" readonly placeholder="Planned pairs will appear here..."></textarea>
+    <button class="btn-copy" id="copyBtn" onclick="copyPlanned()">Copy to clipboard</button>
+  </div>
+</div>
+
+<script>
+let candidates = [];
+let selected = null;
+let plannedMatches = []; // array of { a, b } candidate objects
+
+function savePlanned() {
+  localStorage.setItem('plannedMatches', JSON.stringify(plannedMatches.map(p => ({ aId: p.a.id, bId: p.b.id }))));
+}
+
+function loadPlanned() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('plannedMatches') || '[]');
+    plannedMatches = stored
+      .map(({ aId, bId }) => ({ a: candidates.find(c => c.id === aId), b: candidates.find(c => c.id === bId) }))
+      .filter(p => p.a && p.b);
+  } catch { plannedMatches = []; }
+}
+let modalCandidate = null;
+
+// ── Matched pairs (past) ──────────────────────────────────────────────
+
+let pastPairsCache = [];
+
+function getMatchedPairs() {
+  return pastPairsCache;
+}
+
+function extractName(str) {
+  const m = str.match(/#?\d*\s*(.+?)\s*\(\d+\)/);
+  return m ? m[1].trim() : null;
+}
+
+function getExcludedNames(selectedName) {
+  const pastPairs = getMatchedPairs();
+  const excluded = new Set();
+  const sel = selectedName.toLowerCase();
+
+  // Exclude from past matched pairs
+  for (const [a, b] of pastPairs) {
+    if (a === sel) excluded.add(b);
+    if (b === sel) excluded.add(a);
+  }
+
+  // Also exclude from planned matches
+  for (const { a, b } of plannedMatches) {
+    if (a.name.toLowerCase() === sel) excluded.add(b.name.toLowerCase());
+    if (b.name.toLowerCase() === sel) excluded.add(a.name.toLowerCase());
+  }
+
+  return excluded;
+}
+
+
+// ── Planned matches ───────────────────────────────────────────────────
+
+function pairKey(a, b) {
+  return [a.id, b.id].sort().join('-');
+}
+
+function isAlreadyPlanned(candidateA, candidateB) {
+  const key = pairKey(candidateA, candidateB);
+  return plannedMatches.some(p => pairKey(p.a, p.b) === key);
+}
+
+function addPlanned(a, b) {
+  if (!isAlreadyPlanned(a, b)) {
+    plannedMatches.push({ a, b });
+    savePlanned();
+    renderPlanned();
+    renderCarousel();
+  }
+}
+
+function removePlanned(index) {
+  plannedMatches.splice(index, 1);
+  savePlanned();
+  renderPlanned();
+  renderCarousel();
+}
+
+function formatPair(a, b) {
+  return `#${a.id} ${a.name} (${a.age || '?'}) + #${b.id} ${b.name} (${b.age || '?'})`;
+}
+
+function renderPlanned() {
+  const list = document.getElementById('plannedList');
+  const output = document.getElementById('plannedOutput');
+  const badge = document.getElementById('plannedBadge');
+
+  badge.textContent = plannedMatches.length;
+
+  if (!plannedMatches.length) {
+    list.innerHTML = '<div class="planned-empty">No planned matches yet.<br>Open a profile and click Match.</div>';
+    output.value = '';
+    return;
+  }
+
+  list.innerHTML = plannedMatches.map((p, i) => `
+    <div class="planned-item">
+      <span class="planned-item-text">${formatPair(p.a, p.b)}</span>
+      <button class="planned-item-remove" onclick="removePlanned(${i})" title="Remove">✕</button>
+    </div>
+  `).join('');
+
+  output.value = plannedMatches.map(p => formatPair(p.a, p.b)).join('\n');
+}
+
+function toggleDrawer() {
+  document.getElementById('plannedDrawer').classList.toggle('open');
+}
+
+function copyPlanned() {
+  const text = document.getElementById('plannedOutput').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to clipboard'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────
+
+function openModal(candidateId) {
+  const c = candidates.find(x => x.id === candidateId);
+  if (!c) return;
+  modalCandidate = c;
+
+  const photo = c.image
+    ? `<img class="modal-photo" src="${c.image}" alt="${c.name}" onerror="this.outerHTML='<div class=\\'modal-photo-placeholder\\'>👤</div>'">`
+    : `<div class="modal-photo-placeholder">👤</div>`;
+
+  document.getElementById('modalHeader').innerHTML = `
+    ${photo}
+    <div class="modal-title">
+      <h2>#${c.id} ${c.name}</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+        ${c.age ? `<span class="tag highlight">${c.age} yrs</span>` : ''}
+        ${c.height ? `<span class="tag highlight">${c.height} cm</span>` : ''}
+        ${c.gender ? `<span class="tag">${c.gender}</span>` : ''}
+        ${c.sect ? `<span class="tag">${c.sect}</span>` : ''}
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  `;
+
+  const row = (label, value) => value
+    ? `<div class="modal-row"><span class="modal-label">${label}</span><span class="modal-value">${value}</span></div>`
+    : '';
+
+  document.getElementById('modalBody').innerHTML = `
+    ${row('Status', c.status)}
+    ${row('Has kids', c.hasKids)}
+    ${row('DOB', c.dob)}
+    <hr class="modal-divider">
+    ${row('Location', c.location)}
+    ${row('Ethnicity', c.ethnicity)}
+    ${row('Religiosity', c.religiosity)}
+    <hr class="modal-divider">
+    ${row('Education', c.education)}
+    ${row('Profession', c.profession)}
+    ${row('Income', c.income)}
+    ${row('Hobbies', c.hobbies)}
+    <hr class="modal-divider">
+    ${row('Contact', c.contact)}
+    ${row('Match history', c.matchHistory)}
+    ${row('Comments', c.comments)}
+  `;
+
+  renderModalFooter();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function renderModalFooter() {
+  const c = modalCandidate;
+  if (!c || !selected) return;
+
+  const alreadyPlanned = isAlreadyPlanned(selected, c);
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn-cancel" onclick="closeModal()">Close</button>
+    <button
+      class="btn-match ${alreadyPlanned ? 'already' : ''}"
+      onclick="handleMatchBtn()"
+      ${alreadyPlanned ? 'disabled' : ''}
+    >${alreadyPlanned ? 'Already planned' : `Match with ${selected.name}`}</button>
+  `;
+}
+
+function handleMatchBtn() {
+  if (!selected || !modalCandidate) return;
+  addPlanned(selected, modalCandidate);
+  renderModalFooter();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  modalCandidate = null;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────
+
+function tagHtml(label, value) {
+  if (!value) return '';
+  return `<span class="tag">${label ? label + ': ' : ''}${value}</span>`;
+}
+
+function renderSelected() {
+  const panel = document.getElementById('selectedPanel');
+  const filtersPanel = document.getElementById('filtersPanel');
+
+  if (!selected) {
+    panel.innerHTML = '<span>Select a candidate from the list</span>';
+    panel.classList.add('empty');
+    filtersPanel.style.display = 'none';
+    return;
+  }
+
+  panel.classList.remove('empty');
+  filtersPanel.style.display = 'flex';
+
+  const c = selected;
+  const photoHtml = c.image
+    ? `<img class="selected-photo" src="${c.image}" alt="${c.name}" onerror="this.style.display='none'">`
+    : `<div class="selected-photo-placeholder">👤</div>`;
+
+  panel.innerHTML = `
+    <div class="selected-card">
+      ${photoHtml}
+      <div class="selected-info">
+        <h2>#${c.id} ${c.name}</h2>
+        <div class="tags">
+          ${tagHtml('', c.gender)}
+          ${c.age ? `<span class="tag highlight">${c.age} yrs</span>` : ''}
+          ${c.height ? `<span class="tag highlight">${c.height} cm</span>` : ''}
+          ${tagHtml('', c.sect)}
+          ${tagHtml('', c.status)}
+          ${tagHtml('', c.religiosity)}
+          ${tagHtml('', c.location)}
+          ${tagHtml('', c.ethnicity)}
+          ${tagHtml('', c.profession)}
+          ${tagHtml('', c.education)}
+          ${tagHtml('', c.income)}
+          ${c.hasKids ? tagHtml('Kids', c.hasKids) : ''}
+          ${c.hobbies ? tagHtml('', c.hobbies) : ''}
+        </div>
+        ${c.contact ? `<div class="contact-row">📞 ${c.contact}</div>` : ''}
+        ${c.comments ? `<div class="comments-row">${c.comments}</div>` : ''}
+        ${c.matchHistory ? `<div class="comments-row" style="color:#c07040">Match history: ${c.matchHistory}</div>` : ''}
+      </div>
+    </div>
+  `;
+
+  setDefaultFilters(c);
+  renderCarousel();
+}
+
+function setDefaultFilters(c) {
+  if (c.gender === 'Female') {
+    document.getElementById('fAgeMin').value = c.age || '';
+    document.getElementById('fAgeMax').value = '';
+  } else {
+    document.getElementById('fAgeMin').value = '';
+    document.getElementById('fAgeMax').value = c.age || '';
+  }
+  document.getElementById('fHeightMin').value = '';
+  document.getElementById('fHeightMax').value = '';
+  document.getElementById('fSect').value = '';
+  document.getElementById('fStatus').value = '';
+}
+
+function renderCarousel() {
+  if (!selected) return;
+
+  const c = selected;
+  const excluded = getExcludedNames(c.name);
+  const oppositeGender = c.gender === 'Female' ? 'Male' : 'Female';
+
+  let matches = candidates.filter(m => {
+    if (m.id === c.id) return false;
+    if (m.gender !== oppositeGender) return false;
+    if (excluded.has(m.name.toLowerCase())) return false;
+
+    if (c.gender === 'Female') {
+      if (c.age && m.age && m.age < c.age) return false;
+      if (c.height && m.height && m.height < c.height) return false;
+    } else {
+      if (c.age && m.age && m.age > c.age) return false;
+      if (c.height && m.height && m.height > c.height) return false;
+    }
+    return true;
+  });
+
+  const fAgeMin = parseInt(document.getElementById('fAgeMin').value) || null;
+  const fAgeMax = parseInt(document.getElementById('fAgeMax').value) || null;
+  const fHeightMin = parseInt(document.getElementById('fHeightMin').value) || null;
+  const fHeightMax = parseInt(document.getElementById('fHeightMax').value) || null;
+  const fSect = document.getElementById('fSect').value;
+  const fStatus = document.getElementById('fStatus').value;
+
+  matches = matches.filter(m => {
+    if (fAgeMin && m.age && m.age < fAgeMin) return false;
+    if (fAgeMax && m.age && m.age > fAgeMax) return false;
+    if (fHeightMin && m.height && m.height < fHeightMin) return false;
+    if (fHeightMax && m.height && m.height > fHeightMax) return false;
+    if (fSect && m.sect && !m.sect.toLowerCase().includes(fSect.toLowerCase())) return false;
+    if (fStatus && m.status && !m.status.toLowerCase().includes(fStatus.toLowerCase())) return false;
+    return true;
+  });
+
+  document.getElementById('matchCount').textContent = `${matches.length} match${matches.length !== 1 ? 'es' : ''}`;
+  document.getElementById('carouselHeader').textContent = matches.length
+    ? `Potential matches (${oppositeGender.toLowerCase()}s)`
+    : '';
+
+  const carousel = document.getElementById('carousel');
+  if (!matches.length) {
+    carousel.innerHTML = '<div class="no-matches">No matches found</div>';
+    return;
+  }
+
+  carousel.innerHTML = matches.map(m => {
+    const photo = m.image
+      ? `<img class="match-card-photo" src="${m.image}" alt="${m.name}" onerror="this.outerHTML='<div class=\\'match-card-photo-placeholder\\'>👤</div>'">`
+      : `<div class="match-card-photo-placeholder">👤</div>`;
+    return `
+    <div class="match-card" onclick="openModal(${m.id})">
+      ${photo}
+      <div class="match-card-body">
+        <h3>#${m.id} ${m.name}</h3>
+        <div class="meta">${m.age ? m.age + ' yrs' : '?'} · ${m.height ? m.height + ' cm' : '? cm'}</div>
+        <div class="card-tags">
+          ${tagHtml('', m.sect)}
+          ${tagHtml('', m.status)}
+          ${tagHtml('', m.religiosity)}
+          ${tagHtml('', m.location)}
+          ${tagHtml('', m.ethnicity)}
+          ${tagHtml('', m.profession)}
+          ${m.hasKids ? tagHtml('Kids', m.hasKids) : ''}
+        </div>
+        ${m.contact ? `<div class="contact">${m.contact}</div>` : ''}
+        ${m.comments ? `<div class="comments">${m.comments}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectCandidate(id) {
+  selected = candidates.find(c => c.id === id);
+  history.replaceState(null, '', `#${id}`);
+  document.querySelectorAll('.candidate-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.id) === id);
+  });
+  renderSelected();
+}
+
+function renderList() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const list = document.getElementById('candidateList');
+  const filtered = q
+    ? candidates.filter(c => c.name.toLowerCase().includes(q) || (c.location || '').toLowerCase().includes(q))
+    : candidates;
+
+  list.innerHTML = filtered.map(c => {
+    const thumb = c.image
+      ? `<img class="c-thumb" src="${c.image}" alt="" onerror="this.outerHTML='<div class=\\'c-thumb-placeholder\\'>👤</div>'">`
+      : `<div class="c-thumb-placeholder">👤</div>`;
+    return `
+    <div class="candidate-item gender-${(c.gender || '').toLowerCase()} ${selected && selected.id === c.id ? 'active' : ''}"
+         data-id="${c.id}" onclick="selectCandidate(${c.id})">
+      ${thumb}
+      <div class="c-text">
+        <div class="c-name">#${c.id} ${c.name}</div>
+        <div class="c-meta">${c.gender || '?'} · ${c.age ? c.age + ' yrs' : '?'} · ${c.height ? c.height + ' cm' : '?'} · ${c.location || '?'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function init() {
+  const [candidatesRes, pairsRes] = await Promise.all([
+    fetch('/api/candidates'),
+    fetch('/api/matched-pairs'),
+  ]);
+  candidates = await candidatesRes.json();
+  const { pairs } = await pairsRes.json();
+  if (pairs) {
+    pastPairsCache = pairs.split('\n').map(l => l.trim()).filter(Boolean).flatMap(line => {
+      const parts = line.split('+').map(p => p.trim());
+      if (parts.length !== 2) return [];
+      const nameA = extractName(parts[0]);
+      const nameB = extractName(parts[1]);
+      return nameA && nameB ? [[nameA.toLowerCase(), nameB.toLowerCase()]] : [];
+    });
+  }
+  loadPlanned();
+  renderList();
+  renderPlanned();
+  const hashId = parseInt(location.hash.slice(1));
+  if (hashId) selectCandidate(hashId);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "candidate-browser",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "extract": "rm -rf xlsx_extracted && mkdir -p xlsx_extracted && cp candidates.xlsx xlsx_extracted/candidates.zip && cd xlsx_extracted && unzip -o candidates.zip -d contents && cd .. && cp xlsx_extracted/contents/xl/media/* public/images/",
+    "reload": "npm run extract && node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.2.1",
+    "xlsx": "^0.18.5"
+  }
+}
