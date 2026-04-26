@@ -184,6 +184,9 @@
           <option>Divorced</option>
         </select></label>
       </div>
+      <div class="filter-group">
+        <label>Ethnicity: <input type="text" id="fEthnicity" placeholder="e.g. Lebanese" style="width:120px" oninput="renderCarousel()"></label>
+      </div>
       <span class="match-count" id="matchCount"></span>
     </div>
 
@@ -522,6 +525,7 @@ function setDefaultFilters(c) {
   document.getElementById('fHeightMax').value = '';
   document.getElementById('fSect').value = '';
   document.getElementById('fStatus').value = '';
+  document.getElementById('fEthnicity').value = '';
 }
 
 function renderCarousel(preserveIndex = false) {
@@ -538,6 +542,7 @@ function renderCarousel(preserveIndex = false) {
   const fHeightMax = parseInt(document.getElementById('fHeightMax').value) || null;
   const fSect      = document.getElementById('fSect').value;
   const fStatus    = document.getElementById('fStatus').value;
+  const fEthnicity = document.getElementById('fEthnicity').value.trim();
 
   // UI filter overrides the default age/height criteria when explicitly set
   const ageMin = fAgeMin    !== null ? fAgeMin    : (c.gender === 'Female' ? c.age    : null);
@@ -554,8 +559,13 @@ function renderCarousel(preserveIndex = false) {
     if (ageMax  && m.age    && m.age    > ageMax)  return false;
     if (htMin   && m.height && m.height < htMin)   return false;
     if (htMax   && m.height && m.height > htMax)   return false;
-    if (fSect   && (!m.sect   || !m.sect.toLowerCase().includes(fSect.toLowerCase())))     return false;
-    if (fStatus && (!m.status || !m.status.toLowerCase().includes(fStatus.toLowerCase()))) return false;
+    if (fSect      && (!m.sect      || !m.sect.toLowerCase().includes(fSect.toLowerCase())))      return false;
+    if (fStatus    && (!m.status    || !m.status.toLowerCase().includes(fStatus.toLowerCase())))  return false;
+    if (fEthnicity) {
+      try {
+        if (!m.ethnicity || !new RegExp(fEthnicity, 'i').test(m.ethnicity)) return false;
+      } catch { return false; }
+    }
     return true;
   });
 
