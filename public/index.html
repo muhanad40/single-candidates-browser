@@ -58,25 +58,38 @@
 
   /* Carousel */
   .carousel-section { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-  .carousel-header { padding: 10px 24px 6px; font-size: 0.85rem; font-weight: 600; color: #5a3a7a; }
-  .carousel-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; align-items: flex-start; gap: 14px; padding: 10px 24px 16px; }
-  .carousel-scroll::-webkit-scrollbar { height: 6px; }
-  .carousel-scroll::-webkit-scrollbar-track { background: #e8e0f0; border-radius: 3px; }
-  .carousel-scroll::-webkit-scrollbar-thumb { background: #9a80b8; border-radius: 3px; }
+  .carousel-header { padding: 10px 24px 4px; font-size: 0.85rem; font-weight: 600; color: #5a3a7a; display: flex; align-items: center; gap: 10px; }
+  .carousel-counter { font-size: 0.78rem; color: #aaa; font-weight: 400; margin-left: auto; }
+  .carousel-stage { flex: 1; display: flex; align-items: stretch; overflow: hidden; padding: 10px 24px 14px; gap: 20px; }
 
-  .match-card { background: white; border-radius: 10px; min-width: 190px; max-width: 190px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border: 2px solid transparent; overflow: hidden; }
-  .match-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.13); border-color: #9a80b8; }
-  .match-card-photo { width: 100%; max-height: 260px; object-fit: contain; background: #f0ecf8; display: block; }
-  .match-card-photo-placeholder { width: 100%; height: 180px; background: #f0ecf8; display: flex; align-items: center; justify-content: center; color: #c0b0d0; font-size: 2.5rem; }
-  .match-card-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
-  .match-card h3 { font-size: 0.92rem; color: #3b2a4a; }
-  .match-card .meta { font-size: 0.78rem; color: #888; }
-  .match-card .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-  .match-card .tag { font-size: 0.72rem; padding: 2px 8px; }
-  .match-card .contact { font-size: 0.75rem; color: #9a80b8; margin-top: 4px; word-break: break-all; }
-  .match-card .comments { font-size: 0.74rem; color: #aaa; font-style: italic; margin-top: 2px; }
+  /* Single match card */
+  .match-card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.09); display: flex; flex-direction: row; overflow: hidden; flex: 1; min-height: 0; }
+  .match-card-photo { width: 300px; min-width: 300px; object-fit: contain; background: #f0ecf8; display: block; align-self: stretch; }
+  .match-card-photo-placeholder { width: 300px; min-width: 300px; background: #f0ecf8; display: flex; align-items: center; justify-content: center; color: #c0b0d0; font-size: 3rem; }
+  .match-card-body { flex: 1; padding: 20px 28px; display: flex; flex-direction: column; gap: 0; overflow-y: auto; }
+  .match-card h3 { font-size: 1.25rem; color: #3b2a4a; margin-bottom: 2px; }
+  .match-card .headline { font-size: 0.9rem; color: #7a60a0; margin-bottom: 14px; }
+  .card-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-bottom: 14px; }
+  .card-field { display: flex; flex-direction: column; gap: 1px; }
+  .card-field-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #b0a0c0; }
+  .card-field-value { font-size: 0.88rem; color: #2a2030; }
+  .card-field-value.empty { color: #ccc; font-style: italic; }
+  .card-divider { border: none; border-top: 1px solid #f0e8f8; margin: 10px 0; }
+  .card-contact { font-size: 0.85rem; color: #7a50a0; word-break: break-all; }
+  .card-note { font-size: 0.82rem; color: #aaa; font-style: italic; }
+  .card-note.history { color: #c07040; font-style: normal; }
+  .match-card-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 16px; }
+  .btn-approve { flex: 1; background: #3b2a4a; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-approve:hover { background: #5a3a7a; }
+  .btn-approve.already { background: #a0c8a0; cursor: default; }
+  .btn-reject { flex: 1; background: #f5f0fa; color: #9a70c0; border: 1px solid #d8c8f0; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-reject:hover { background: #ede0fa; }
+  .carousel-nav { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .nav-btn { background: white; border: 1px solid #d8c8f0; color: #7a50a0; width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .nav-btn:hover { background: #f0e8fa; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
-  .no-matches { display: flex; align-items: center; justify-content: center; width: 100%; color: #aaa; font-size: 0.9rem; }
+  .no-matches { display: flex; align-items: center; justify-content: center; flex: 1; color: #aaa; font-size: 0.9rem; }
 
   /* Matched pairs panel */
 
@@ -176,8 +189,11 @@
 
     <!-- Carousel -->
     <div class="carousel-section">
-      <div class="carousel-header" id="carouselHeader"></div>
-      <div class="carousel-scroll" id="carousel"></div>
+      <div class="carousel-header">
+        <span id="carouselHeader"></span>
+        <span class="carousel-counter" id="matchCount"></span>
+      </div>
+      <div class="carousel-stage" id="carousel"></div>
     </div>
 
   </div>
@@ -223,6 +239,27 @@ function loadPlanned() {
   } catch { plannedMatches = []; }
 }
 let modalCandidate = null;
+let currentMatchIndex = 0;
+let currentMatches = [];
+
+// ── Rejections ────────────────────────────────────────────────────────
+
+function rejectionKey(selectedId, candidateId) {
+  return `${selectedId}:${candidateId}`;
+}
+
+function getRejectedKeys() {
+  try { return new Set(JSON.parse(localStorage.getItem('rejectedPairs') || '[]')); }
+  catch { return new Set(); }
+}
+
+function rejectCandidate(selectedId, candidateId) {
+  const keys = getRejectedKeys();
+  keys.add(rejectionKey(selectedId, candidateId));
+  localStorage.setItem('rejectedPairs', JSON.stringify([...keys]));
+  // Advance to next, rebuild matches without rejected
+  renderCarousel();
+}
 
 // ── Matched pairs (past) ──────────────────────────────────────────────
 
@@ -415,6 +452,14 @@ function tagHtml(label, value) {
   return `<span class="tag">${label ? label + ': ' : ''}${value}</span>`;
 }
 
+function cardField(label, value) {
+  if (!value) return '';
+  return `<div class="card-field">
+    <span class="card-field-label">${label}</span>
+    <span class="card-field-value">${value}</span>
+  </div>`;
+}
+
 function renderSelected() {
   const panel = document.getElementById('selectedPanel');
   const filtersPanel = document.getElementById('filtersPanel');
@@ -479,17 +524,19 @@ function setDefaultFilters(c) {
   document.getElementById('fStatus').value = '';
 }
 
-function renderCarousel() {
+function renderCarousel(preserveIndex = false) {
   if (!selected) return;
 
   const c = selected;
   const excluded = getExcludedNames(c.name);
   const oppositeGender = c.gender === 'Female' ? 'Male' : 'Female';
+  const rejected = getRejectedKeys();
 
   let matches = candidates.filter(m => {
     if (m.id === c.id) return false;
     if (m.gender !== oppositeGender) return false;
     if (excluded.has(m.name.toLowerCase())) return false;
+    if (rejected.has(rejectionKey(c.id, m.id))) return false;
 
     if (c.gender === 'Female') {
       if (c.age && m.age && m.age < c.age) return false;
@@ -518,41 +565,82 @@ function renderCarousel() {
     return true;
   });
 
-  document.getElementById('matchCount').textContent = `${matches.length} match${matches.length !== 1 ? 'es' : ''}`;
-  document.getElementById('carouselHeader').textContent = matches.length
-    ? `Potential matches (${oppositeGender.toLowerCase()}s)`
-    : '';
+  currentMatches = matches;
+  if (!preserveIndex) currentMatchIndex = 0;
+  currentMatchIndex = Math.min(currentMatchIndex, Math.max(0, matches.length - 1));
 
   const carousel = document.getElementById('carousel');
+  const header = document.getElementById('carouselHeader');
+  const counter = document.getElementById('matchCount');
+
   if (!matches.length) {
+    header.textContent = '';
+    counter.textContent = '';
     carousel.innerHTML = '<div class="no-matches">No matches found</div>';
     return;
   }
 
-  carousel.innerHTML = matches.map(m => {
-    const photo = m.image
-      ? `<img class="match-card-photo" src="${m.image}" alt="${m.name}" onerror="this.outerHTML='<div class=\\'match-card-photo-placeholder\\'>👤</div>'">`
-      : `<div class="match-card-photo-placeholder">👤</div>`;
-    return `
-    <div class="match-card" onclick="openModal(${m.id})">
+  header.textContent = `Potential matches (${oppositeGender.toLowerCase()}s)`;
+  counter.textContent = `${currentMatchIndex + 1} of ${matches.length}`;
+
+  const m = matches[currentMatchIndex];
+  const photo = m.image
+    ? `<img class="match-card-photo" src="${m.image}" alt="${m.name}" onerror="this.outerHTML='<div class=\\'match-card-photo-placeholder\\'>👤</div>'">`
+    : `<div class="match-card-photo-placeholder">👤</div>`;
+
+  carousel.innerHTML = `
+    <div class="carousel-nav">
+      <button class="nav-btn" onclick="navigateCarousel(-1)" ${currentMatchIndex === 0 ? 'disabled' : ''}>&#8593;</button>
+      <button class="nav-btn" onclick="navigateCarousel(1)" ${currentMatchIndex === matches.length - 1 ? 'disabled' : ''}>&#8595;</button>
+    </div>
+    <div class="match-card">
       ${photo}
       <div class="match-card-body">
         <h3>#${m.id} ${m.name}</h3>
-        <div class="meta">${m.age ? m.age + ' yrs' : '?'} · ${m.height ? m.height + ' cm' : '? cm'}</div>
-        <div class="card-tags">
-          ${tagHtml('', m.sect)}
-          ${tagHtml('', m.status)}
-          ${tagHtml('', m.religiosity)}
-          ${tagHtml('', m.location)}
-          ${tagHtml('', m.ethnicity)}
-          ${tagHtml('', m.profession)}
-          ${m.hasKids ? tagHtml('Kids', m.hasKids) : ''}
+        <div class="headline">${[m.age ? m.age + ' yrs' : null, m.height ? m.height + ' cm' : null, m.gender].filter(Boolean).join(' · ')}</div>
+        <div class="card-fields">
+          ${cardField('Location', m.location)}
+          ${cardField('Ethnicity', m.ethnicity)}
+          ${cardField('Sect', m.sect)}
+          ${cardField('Religiosity', m.religiosity)}
+          ${cardField('Status', m.status)}
+          ${cardField('Has kids', m.hasKids)}
+          ${cardField('Profession', m.profession)}
+          ${cardField('Education', m.education)}
+          ${cardField('Income', m.income)}
+          ${cardField('Hobbies', m.hobbies)}
+          ${cardField('DOB', m.dob)}
         </div>
-        ${m.contact ? `<div class="contact">${m.contact}</div>` : ''}
-        ${m.comments ? `<div class="comments">${m.comments}</div>` : ''}
+        ${m.contact || m.matchHistory || m.comments ? '<hr class="card-divider">' : ''}
+        ${m.contact ? `<div class="card-contact">${m.contact}</div>` : ''}
+        ${m.matchHistory ? `<div class="card-note history">Match history: ${m.matchHistory}</div>` : ''}
+        ${m.comments ? `<div class="card-note">${m.comments}</div>` : ''}
+        <div class="match-card-actions">
+          <button class="btn-reject" onclick="handleReject(${m.id})">✕ Reject</button>
+          <button class="btn-approve ${isAlreadyPlanned(selected, m) ? 'already' : ''}"
+            onclick="handleDirectMatch(${m.id})"
+            ${isAlreadyPlanned(selected, m) ? 'disabled' : ''}>
+            ${isAlreadyPlanned(selected, m) ? 'Already planned' : '✓ Match'}
+          </button>
+        </div>
       </div>
     </div>`;
-  }).join('');
+}
+
+function navigateCarousel(dir) {
+  currentMatchIndex = Math.max(0, Math.min(currentMatches.length - 1, currentMatchIndex + dir));
+  renderCarousel(true);
+}
+
+function handleReject(candidateId) {
+  rejectCandidate(selected.id, candidateId);
+}
+
+function handleDirectMatch(candidateId) {
+  const m = candidates.find(c => c.id === candidateId);
+  if (!m || !selected) return;
+  addPlanned(selected, m);
+  renderCarousel(true);
 }
 
 function selectCandidate(id) {
