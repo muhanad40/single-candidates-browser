@@ -326,7 +326,8 @@ function removePlanned(index) {
 }
 
 function formatPair(a, b) {
-  return `#${a.id} ${a.name} (${a.age || '?'}) + #${b.id} ${b.name} (${b.age || '?'})`;
+  const [female, male] = a.gender === 'Female' ? [a, b] : [b, a];
+  return `#${female.id} ${female.name} (${female.age || '?'}) + #${male.id} ${male.name} (${male.age || '?'})`;
 }
 
 function renderPlanned() {
