@@ -343,14 +343,20 @@ function renderPlanned() {
     return;
   }
 
-  list.innerHTML = plannedMatches.map((p, i) => `
+  const sorted = [...plannedMatches].sort((x, y) => {
+    const femaleX = x.a.gender === 'Female' ? x.a : x.b;
+    const femaleY = y.a.gender === 'Female' ? y.a : y.b;
+    return (femaleY.age || 0) - (femaleX.age || 0);
+  });
+
+  list.innerHTML = sorted.map((p, i) => `
     <div class="planned-item">
       <span class="planned-item-text">${formatPair(p.a, p.b)}</span>
       <button class="planned-item-remove" onclick="removePlanned(${i})" title="Remove">✕</button>
     </div>
   `).join('');
 
-  output.value = plannedMatches.map(p => formatPair(p.a, p.b)).join('\n');
+  output.value = sorted.map(p => formatPair(p.a, p.b)).join('\n');
 }
 
 function toggleDrawer() {
